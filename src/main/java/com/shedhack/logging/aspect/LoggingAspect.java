@@ -8,10 +8,11 @@ import java.util.Arrays;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import com.shedhack.logging.annotation.Loggable;
 
 /**
  * This implementation is responsible for all high-level logging.
@@ -29,52 +30,58 @@ public class LoggingAspect
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
 
-    @SuppressWarnings("unused")
-    @Pointcut("@annotation(com.shedhack.logging.annotation.Loggable)")
-    private void packagePointcut()
-    {
-    };
-
-    @Around("packagePointcut()")
-    public Object logAround(ProceedingJoinPoint pjp) throws Throwable
+    @Around("@annotation(loggable)")
+    public Object logAround(ProceedingJoinPoint pjp, Loggable loggable) throws Throwable
     {
         try
         {
-            logBefore(pjp);
+            logBefore(pjp, loggable);
             Object object = pjp.proceed();
-            logAfterResponse(pjp, object);
+            logAfterResponse(pjp, object, loggable);
             return object;
         }
         catch (Exception ex)
         {
-            logException(pjp, ex);
+            logException(pjp, ex, loggable);
             throw ex;
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @param pjp
      */
-    public void logBefore(ProceedingJoinPoint pjp)
+    public void logBefore(ProceedingJoinPoint pjp, Loggable loggable)
     {
-        writeToLog(new StringBuilder().append(" [Before] ").append(buildMethodString(pjp)).toString(), false);
+        if (loggable.logBefore() && !loggable.logOnlyExceptions())
+            writeToLog(new StringBuilder().append(" [Before] ").append(buildMethodString(pjp, loggable)).toString(), loggable);
     }
 
     /**
-     * {@inheritDoc}
+     * @param pjp
+     * @param response
      */
-    public void logAfterResponse(ProceedingJoinPoint pjp, Object response)
+    public void logAfterResponse(ProceedingJoinPoint pjp, Object response, Loggable loggable)
     {
-        writeToLog(new StringBuilder().append(" [Response] ").append(buildMethodString(pjp)).append(" [Return] ").append(response).toString(), false);
+        if (loggable.logResponse() && !loggable.logOnlyExceptions())
+        {
+            StringBuilder builder = new StringBuilder().append(" [Response] ").append(buildMethodString(pjp, loggable));
+
+            if (loggable.logArgumentsAndResults())
+                builder.append(" [Return] ").append(response);
+
+            writeToLog(builder.toString(), loggable);
+        }
     }
 
     /**
-     * {@inheritDoc}
+     * @param pjp
+     * @param ex
      */
-    public void logException(ProceedingJoinPoint pjp, Exception ex)
+    public void logException(ProceedingJoinPoint pjp, Exception ex, Loggable loggable)
     {
-        writeToLog(new StringBuilder().append(" [Exception] ").append(buildMethodString(pjp)).append(" [Message] ").append(ex.getLocalizedMessage()).append("\n").append(getStackTrace(ex)).toString(),
-                true);
+        if (loggable.logExceptions() || loggable.logOnlyExceptions())
+            logger.error(new StringBuilder().append(" [Exception] ").append(buildMethodString(pjp, loggable)).append(" [Message] ").append(ex.getLocalizedMessage()).append("\n")
+                    .append(getStackTrace(ex)).toString());
     }
 
     /**
@@ -84,10 +91,15 @@ public class LoggingAspect
      *            the join point
      * @return the string
      */
-    private String buildMethodString(ProceedingJoinPoint pjp)
+    private String buildMethodString(ProceedingJoinPoint pjp, Loggable loggable)
     {
-        return new StringBuilder("[class] ").append(pjp.getTarget().getClass().getSimpleName()).append(" [method] ").append(pjp.getSignature()).append(" [args] ")
-                .append(Arrays.toString(pjp.getArgs())).toString();
+
+        StringBuilder builder = new StringBuilder("[class] ").append(pjp.getTarget().getClass().getSimpleName()).append(" [method] ").append(pjp.getSignature());
+
+        if (loggable.logArgumentsAndResults())
+            builder.append(" [args] ").append(Arrays.toString(pjp.getArgs()));
+
+        return builder.toString();
     }
 
     /**
@@ -106,22 +118,28 @@ public class LoggingAspect
     }
 
     /**
-     * Write to log.
-     * 
      * @param msg
-     *            the msg
-     * @param exception
-     *            the exception
+     * @param loggable
      */
-    private void writeToLog(String msg, boolean exception)
+    private void writeToLog(String msg, Loggable loggable)
     {
-        if (exception)
+        switch (loggable.logLevel())
         {
-            logger.error(msg);
-        }
-        else
-        {
-            logger.info(msg);
+            case TRACE:
+                logger.trace(msg);
+                break;
+
+            case DEBUG:
+                logger.debug(msg);
+                break;
+
+            case WARN:
+                logger.warn(msg);
+                break;
+
+            default:
+                logger.info(msg);
+                break;
         }
     }
 }

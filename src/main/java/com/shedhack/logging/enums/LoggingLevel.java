@@ -1,5 +1,6 @@
 package com.shedhack.logging.enums;
 
-public enum LoggingLevel {
-	NONE, ERROR, DEBUG, INFO;
+public enum LoggingLevel
+{
+    TRACE, DEBUG, INFO, WARN, ERROR;
 }

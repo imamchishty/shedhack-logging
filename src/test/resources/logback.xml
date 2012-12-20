@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%d %5p | %t | %-55logger{55} | %m %n</pattern>
-        </encoder>
-    </appender>
+		</encoder>
+	</appender>
 
-    <logger name="com.shedhack.test">
-        <level value="INFO" />
-    </logger>
+	<logger name="com.shedhack" level="ALL" />
 
-    <logger name="org.springframework">
-        <level value="ERROR" />
-    </logger>
+	<root level="INFO">
+		<appender-ref ref="STDOUT" />
+	</root>
 
-    <root>
-        <level value="INFO" />
-        <appender-ref ref="CONSOLE" />
-    </root>
 </configuration>

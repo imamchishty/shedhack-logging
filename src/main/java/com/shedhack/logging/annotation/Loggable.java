@@ -5,31 +5,69 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.shedhack.logging.aspect.LoggingAspect;
 import com.shedhack.logging.enums.LoggingLevel;
 
 /**
- * Public methods that require logging via aop should use this annotation. In
- * order to use this you must import <code>shedhack-logging-context.xml</code>
- * and mark the public method with this annotation.
+ * Public methods that require logging via aop should use this annotation. This
+ * annotation is tied closely to the {@link LoggingAspect}. This aspect is
+ * marked with {@link org.aspectj.lang.annotation.Aspect} and
+ * {@link org.springframework.stereotype.Component}. In order to use this you
+ * must all 'com.shedhack.logging' to your component scan and add the aop tag:
+ * 
+ * <pre>
+ *  <code>
+ *  <context:component-scan base-package="com.shedhack.logging, com.shedhack.test"/>
+ *  <aop:aspectj-autoproxy/>
+ *  </code>
+ * </pre>
  */
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Loggable
 {
     /**
-     * Set to true to see the parameters in the output log. By default they will
-     * be enabled. If you have lots of params then this will not be suitable and
-     * may cause a reduction in performance. Use with caution.
+     * Before a method is called, the aspect will log the invocation. You can
+     * disable this by setting this property to false. If you're only interested
+     * in logging exceptions then it is recommended to set logOnlyExceptions()
+     * to true. By doing so you'll automatically stop before and response
+     * logging.
      */
-    boolean logParameters() default true;
+    boolean logBefore() default true;
 
     /**
-     * If you have a method with a return type then this will be logged.
+     * After a method is called, the aspect will log the invocation. You can
+     * disable this by setting this property to false. If you're only interested
+     * in logging exceptions then it is recommended to set logOnlyExceptions()
+     * to true. By doing so you'll automatically stop before and response
+     * logging.
      */
     boolean logResponse() default true;
+
+    /**
+     * By default all exceptions will be logged. You can disable this if
+     * required.
+     */
+    boolean logExceptions() default true;
+
+    /**
+     * By default before, after and exceptions are logged. If you wish to lessen
+     * you're logs switch this property to true. By doing so only exceptions
+     * will be logged.
+     */
+    boolean logOnlyExceptions() default false;
+
+    /**
+     * In some cases it may be inappropriate to log arguments and results, for
+     * example login. In order to prevent the arguments from showing in the logs
+     * set this to false. Default is true, which shows the arguments and the
+     * results.
+     */
+    boolean logArgumentsAndResults() default true;
 
     /**
      * Define the logging level
      */
     LoggingLevel logLevel() default LoggingLevel.INFO;
+
 }
