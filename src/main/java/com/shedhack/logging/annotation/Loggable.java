@@ -21,6 +21,28 @@ import com.shedhack.logging.enums.LoggingLevel;
  *  <aop:aspectj-autoproxy/>
  *  </code>
  * </pre>
+ * 
+ * The appropriate logging configuration should also be made available in the
+ * classpath. For example:
+ * 
+ * <pre>
+ *  <code>
+ *      <?xml version="1.0" encoding="UTF-8"?>
+ *      <configuration>
+ *          <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+ *              <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+ *                  <pattern>%d %5p | %t | %-55logger{55} | %m %n</pattern>
+ *              </encoder>
+ *          </appender>
+ *              
+ *          <logger name="com.shedhack" level="ALL" />
+ *              
+ *          <root level="INFO">
+ *              <appender-ref ref="STDOUT" />
+ *          </root>
+ *      </configuration>
+ *  </code>
+ * </pre>
  */
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)

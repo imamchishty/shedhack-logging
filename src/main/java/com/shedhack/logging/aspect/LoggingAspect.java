@@ -15,7 +15,39 @@ import org.springframework.stereotype.Component;
 import com.shedhack.logging.annotation.Loggable;
 
 /**
- * This implementation is responsible for all high-level logging.
+ * This aspect is responsible for high-level non-intrusive logging of method
+ * invocations. This aspect works with the {@link Loggable} annotation. This
+ * annotation should be placed on appropriate methods for the aspect to start
+ * logging. This is a Spring component, thus requires some Spring configuration:
+ * 
+ * <pre>
+ *  <code>
+ *  <context:component-scan base-package="com.shedhack.logging, com.shedhack.test"/>
+ *  <aop:aspectj-autoproxy/>
+ *  </code>
+ * </pre>
+ * 
+ * The appropriate logging configuration should also be made available in the
+ * classpath. For example:
+ * 
+ * <pre>
+ *  <code>
+ *      <?xml version="1.0" encoding="UTF-8"?>
+ *      <configuration>
+ *          <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+ *              <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+ *                  <pattern>%d %5p | %t | %-55logger{55} | %m %n</pattern>
+ *              </encoder>
+ *          </appender>
+ *              
+ *          <logger name="com.shedhack" level="ALL" />
+ *              
+ *          <root level="INFO">
+ *              <appender-ref ref="STDOUT" />
+ *          </root>
+ *      </configuration>
+ *  </code>
+ * </pre>
  */
 @Component
 @Aspect
